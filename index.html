@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>番茄鐘 Pomodoro Timer</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #f7f7f7;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      transition: background-color 0.5s ease;
+    }
+
+    /* 模式背景顏色切換 */
+    body.work-mode {
+      background-color: #e76f51;
+    }
+
+    body.break-mode {
+      background-color: #2a9d8f;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 2.5rem;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      text-align: center;
+      width: 320px;
+    }
+
+    .status {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      color: #333;
+    }
+
+    .timer {
+      font-size: 4.5rem;
+      font-weight: bold;
+      color: #222;
+      margin: 1.5rem 0;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    button {
+      flex: 1;
+      padding: 0.8rem 0;
+      font-size: 1rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background-color: #e0e0e0;
+      color: #333;
+    }
+
+    button:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    #startPauseBtn {
+      background-color: #264653;
+      color: white;
+    }
+  </style>
+</head>
+<body class="work-mode">
+
+  <div class="container">
+    <div class="status" id="statusText">🎯 專注時間</div>
+    <div class="timer" id="timerDisplay">25:00</div>
+    <div class="controls">
+      <button id="startPauseBtn">開始</button>
+      <button id="resetBtn">重置</button>
+    </div>
+  </div>
+
+  <script>
+    // 時間設定 (秒)
+    const WORK_TIME = 25 * 60;
+    const BREAK_TIME = 5 * 60;
+
+    let timeLeft = WORK_TIME;
+    let timerId = null;
+    let isWorkMode = true;
+
+    const timerDisplay = document.getElementById('timerDisplay');
+    const statusText = document.getElementById('statusText');
+    const startPauseBtn = document.getElementById('startPauseBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    // 更新畫面倒數文字與網頁標題
+    function updateDisplay() {
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      
+      timerDisplay.textContent = formattedTime;
+      document.title = `(${formattedTime}) - ${isWorkMode ? '專注中' : '休息中'}`;
+    }
+
+    // 切換專注 / 休息模式
+    function switchMode() {
+      isWorkMode = !isWorkMode;
+      timeLeft = isWorkMode ? WORK_TIME : BREAK_TIME;
+      
+      if (isWorkMode) {
+        document.body.className = 'work-mode';
+        statusText.textContent = '🎯 專注時間';
+      } else {
+        document.body.className = 'break-mode';
+        statusText.textContent = '☕ 休息時間';
+      }
+      updateDisplay();
+    }
+
+    // 計時器主邏輯
+    function startTimer() {
+      if (timerId !== null) return;
+
+      startPauseBtn.textContent = '暫停';
+      timerId = setInterval(() => {
+        timeLeft--;
+        updateDisplay();
+
+        if (timeLeft <= 0) {
+          clearInterval(timerId);
+          timerId = null;
+          alert(isWorkMode ? '專注時間結束！好好休息 5 分鐘吧！' : '休息結束！準備開始下一輪專注！');
+          switchMode();
+          startTimer(); // 自動開始下一階段
+        }
+      }, 1000);
+    }
+
+    function pauseTimer() {
+      clearInterval(timerId);
+      timerId = null;
+      startPauseBtn.textContent = '繼續';
+    }
+
+    function resetTimer() {
+      clearInterval(timerId);
+      timerId = null;
+      isWorkMode = true;
+      timeLeft = WORK_TIME;
+      document.body.className = 'work-mode';
+      statusText.textContent = '🎯 專注時間';
+      startPauseBtn.textContent = '開始';
+      updateDisplay();
+    }
+
+    // 事件監聽
+    startPauseBtn.addEventListener('click', () => {
+      if (timerId === null) {
+        startTimer();
+      } else {
+        pauseTimer();
+      }
+    });
+
+    resetBtn.addEventListener('click', resetTimer);
+
+    // 初始化顯示
+    updateDisplay();
+  </script>
+</body>
+</html>
